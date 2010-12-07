@@ -50,13 +50,13 @@ func main() {
 
 loop:
 	for {
-		e := <-mainWindow.EventChan()
-		switch f := e.(type) {
+		windowEvent := <-mainWindow.EventChan()
+		switch event := windowEvent.(type) {
 			case draw.MouseEvent:
-				fmt.Printf("Mouse Event\n")
+				fmt.Printf("Mouse Event Buttons %d\n", event.Buttons)
 			case draw.KeyEvent:
-				fmt.Printf("Key Event %d\n", f.Key)
-				if f.Key == 65307 { // ESC
+				fmt.Printf("Key Event %d\n", event.Key)
+				if event.Key == 65307 { // ESC
 					break loop
 				}
 			case draw.ConfigEvent:
