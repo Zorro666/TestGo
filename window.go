@@ -8,6 +8,8 @@ import "time"
 import "exp/draw"
 import "exp/draw/x11"
 
+//import "./file"
+
 var (
 	red = image.NewColorImage(image.RGBAColor{0xFF, 0, 0, 0xFF})
 )
