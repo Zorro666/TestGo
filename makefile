@@ -4,16 +4,36 @@
 
 include ${GOROOT}/src/Make.inc
 
-all:window
+WINDOW_SRCFILES=window.go
+WINDOW_OBJFILES=$(WINDOW_SRCFILES:.go=.8)
 
-SRCFILES=window.go file.go
+TESTFILE_SRCFILES=testfile.go file.go
+TESTFILE_OBJFILES=$(TESTFILE_SRCFILES:.go=.8)
+
+CAT_SRCFILES=cat.go file.go
+CAT_OBJFILES=$(CAT_SRCFILES:.go=.8)
+
+SRCFILES=\
+	$(WINDOW_SRCFILES)\
+	$(TESTFILE_SRCFILES)\
+	$(CAT_SRCFILES)\
+
 OBJFILES=$(SRCFILES:.go=.8)
 
-window: $(OBJFILES)
+TARGETS = \
+	window\
+	testfile\
+	cat\
 
-window.8: file.8 window.go 
+all:$(TARGETS)
 
-TARG=window
+window: $(WINDOW_OBJFILES)
+
+testfile: $(TESTFILE_OBJFILES)
+testfile.8: file.8 testfile.go 
+
+cat: $(CAT_OBJFILES)
+cat.8: file.8 cat.go 
 
 %.8: %.go
 	$(GC) $<
@@ -21,8 +41,12 @@ TARG=window
 %: %.8
 	$(LD) -o $@ $<
 
+.SUFFIXES:            # Delete the default suffixes
+
 clean:
 	rm -f $(OBJFILES)
 
 nuke: clean
-	rm -f $(TARG)
+	rm -f $(TARGETS)
+
+format: $(SRCFILES)
