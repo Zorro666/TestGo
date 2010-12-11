@@ -7,23 +7,68 @@ import (
 	"os"
 )
 
-func cat(f *file.File) {
+var rot13Flag = flag.Bool("rot13", false, "rot13 the input")
+
+func rot13(b byte) byte {
+	if b < 'a' || b > 'z' {
+		return b
+	}
+	b += 13
+	if b > 'z' {
+		b -= 26
+	}
+	return b
+}
+
+func cat(r reader) {
 	const NBUF = 512
 	var buf [NBUF]byte
+
+	if *rot13Flag {
+		r = newRotate13(r)
+	}
 	for {
-		switch nr, er := f.Read(buf[:]); true {
+		switch nr, er := r.Read(buf[:]); true {
 		case nr < 0:
-			fmt.Fprintf(os.Stderr, "cat: error reading from %s: %s\n", f.String(), er.String())
+			fmt.Fprintf(os.Stderr, "cat: error reading from %s: %s\n", r.String(), er.String())
 			os.Exit(1)
 		case nr == 0: //EOF
 			return
 		case nr > 0:
 			if nw, ew := file.Stdout.Write(buf[0:nr]); nw != nr {
-				fmt.Fprintf(os.Stderr, "cat: error writing from %s: %s\n", f.String(), ew.String())
+				fmt.Fprintf(os.Stderr, "cat: error writing from %s: %s\n", r.String(), ew.String())
 			}
 		}
 	}
 }
+
+type reader interface {
+	Read(b []byte) (ret int, err os.Error)
+	String() string
+}
+
+// rotate13 implementation
+type rotate13 struct {
+	source reader
+}
+
+func newRotate13(source reader) *rotate13 {
+	return &rotate13{source}
+}
+
+func (r13 *rotate13) Read(b []byte) (ret int, err os.Error) {
+	r, e := r13.source.Read(b)
+	for i := 0; i < r;  i++ {
+		b[i] = rot13(b[i])
+	}
+	return r,e
+
+}
+
+func (r13 *rotate13) String() string {
+	return r13.source.String()
+}
+// end of rotate13 implementation
 
 func main() {
 	flag.Parse() // Scans the arg list and sets up flags
