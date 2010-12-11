@@ -38,6 +38,8 @@ func render(window draw.Window) {
 	}
 }
 
+type Empty interface{}
+
 func main() {
 	var mainWindow draw.Window
 	var error os.Error
@@ -52,7 +54,7 @@ func main() {
 
 loop:
 	for {
-		windowEvent := <-mainWindow.EventChan()
+		var windowEvent Empty = <-mainWindow.EventChan()
 		switch event := windowEvent.(type) {
 		case draw.MouseEvent:
 			fmt.Printf("Mouse Event Buttons %d\n", event.Buttons)
