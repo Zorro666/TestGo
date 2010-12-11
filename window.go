@@ -57,7 +57,7 @@ func (keyEvent MyKeyEvent) String() string {
 		keyString = fmt.Sprintf("'%c'", key)
 	}
 
-	return fmt.Sprint(isPressed, " ", keyString, " ", key)
+	return fmt.Sprintf("%s %s %v 0x%X", isPressed, keyString, key, key)
 }
 
 func main() {
