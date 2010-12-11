@@ -40,6 +40,26 @@ func render(window draw.Window) {
 
 type Empty interface{}
 
+type MyKeyEvent struct {
+	drawKeyEvent draw.KeyEvent
+}
+
+func (keyEvent MyKeyEvent) String() string {
+	key := keyEvent.drawKeyEvent.Key
+	isPressed := "Press"
+	if key < 0 {
+		isPressed = "Release"
+		key = -key
+	}
+
+	keyString := "'UNKNOWN'"
+	if ' ' <= key && key <= 'z' {
+		keyString = fmt.Sprintf("'%c'", key)
+	}
+
+	return fmt.Sprint(isPressed, " ", keyString, " ", key)
+}
+
 func main() {
 	var mainWindow draw.Window
 	var error os.Error
@@ -59,8 +79,10 @@ loop:
 		case draw.MouseEvent:
 			fmt.Printf("Mouse Event Buttons %d\n", event.Buttons)
 		case draw.KeyEvent:
-			fmt.Printf("Key Event %d\n", event.Key)
-			if event.Key == 65307 { // ESC
+			var keyEvent MyKeyEvent
+			keyEvent.drawKeyEvent = event
+			fmt.Println("Key Event", keyEvent)
+			if keyEvent.drawKeyEvent.Key == 65307 { // ESC
 				break loop
 			}
 		case draw.ConfigEvent:
