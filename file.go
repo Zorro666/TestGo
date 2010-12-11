@@ -19,8 +19,8 @@ func newFile(fd int, name string) *File {
 
 var (
 	Stdin  = newFile(0, "/dev/stdin")
-	Stdout = newFile(0, "/dev/stdout")
-	Stderr = newFile(0, "/dev/stderr")
+	Stdout = newFile(1, "/dev/stdout")
+	Stderr = newFile(2, "/dev/stderr")
 )
 
 func Open(name string, mode int, perm uint32) (file *File, err os.Error) {
