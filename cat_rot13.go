@@ -10,14 +10,13 @@ import (
 var rot13Flag = flag.Bool("rot13", false, "rot13 the input")
 
 func rot13(b byte) byte {
-	if b < 'a' || b > 'z' {
-		return b
-	}
-	b += 13
-	if b > 'z' {
-		b -= 26
-	}
-	return b
+    if 'a' <= b && b <= 'z' {
+        b = 'a' + ((b-'a')+13)%26
+    }
+    if 'A' <= b && b <= 'Z' {
+        b = 'A' + ((b-'A')+13)%26
+    }
+    return b
 }
 
 func cat(r reader) {
