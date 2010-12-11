@@ -19,11 +19,20 @@ CAT_ROT13_OBJFILES=$(CAT_ROT13_SRCFILES:.go=.8)
 SORTMAIN_SRCFILES=sortmain.go sort.go
 SORTMAIN_OBJFILES=$(SORTMAIN_SRCFILES:.go=.8)
 
+SIEVE_SRCFILES=sieve.go
+SIEVE_OBJFILES=$(SIEVE_SRCFILES:.go=.8)
+
+SIEVE1_SRCFILES=sieve1.go
+SIEVE1_OBJFILES=$(SIEVE1_SRCFILES:.go=.8)
+
 SRCFILES=\
 	$(WINDOW_SRCFILES)\
 	$(TESTFILE_SRCFILES)\
 	$(CAT_SRCFILES)\
 	$(CAT_ROT13_SRCFILES)\
+	$(SORTMAIN_SRCFILES)\
+	$(SIEVE_SRCFILES)\
+	$(SIEVE1_SRCFILES)\
 
 OBJFILES=$(SRCFILES:.go=.8)
 FMTFILES=$(SRCFILES:.go=.fmt.tmp)
@@ -34,6 +43,8 @@ TARGETS = \
 	cat\
 	cat_rot13\
 	sortmain\
+	sieve\
+	sieve1\
 
 all:$(TARGETS)
 
@@ -50,6 +61,10 @@ cat_rot13.8: file.8 cat_rot13.go
 
 sortmain: $(SORTMAIN_OBJFILES)
 sortmain.8: sort.8 sortmain.go 
+
+sieve: $(SIEVE_OBJFILES)
+
+sieve1: $(SIEVE1_OBJFILES)
 
 %.8: %.go
 	$(GC) $<
