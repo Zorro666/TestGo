@@ -10,13 +10,13 @@ import (
 var rot13Flag = flag.Bool("rot13", false, "rot13 the input")
 
 func rot13(b byte) byte {
-    if 'a' <= b && b <= 'z' {
-        b = 'a' + ((b-'a')+13)%26
-    }
-    if 'A' <= b && b <= 'Z' {
-        b = 'A' + ((b-'A')+13)%26
-    }
-    return b
+	if 'a' <= b && b <= 'z' {
+		b = 'a' + ((b-'a')+13)%26
+	}
+	if 'A' <= b && b <= 'Z' {
+		b = 'A' + ((b-'A')+13)%26
+	}
+	return b
 }
 
 func cat(r reader) {
@@ -57,10 +57,10 @@ func newRotate13(source reader) *rotate13 {
 
 func (r13 *rotate13) Read(b []byte) (ret int, err os.Error) {
 	r, e := r13.source.Read(b)
-	for i := 0; i < r;  i++ {
+	for i := 0; i < r; i++ {
 		b[i] = rot13(b[i])
 	}
-	return r,e
+	return r, e
 
 }
 
