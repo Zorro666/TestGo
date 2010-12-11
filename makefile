@@ -4,67 +4,61 @@
 
 include ${GOROOT}/src/Make.inc
 
-WINDOW_SRCFILES=window.go
-WINDOW_OBJFILES=$(WINDOW_SRCFILES:.go=.8)
+TESTFILE_DEPENDS:=file.go
+CAT_DEPENDS:=file.go
+CAT_ROT13_DEPENDS:=file.go
+SORTMAIN_DEPENDS:=sort.go
 
-TESTFILE_SRCFILES=testfile.go file.go
-TESTFILE_OBJFILES=$(TESTFILE_SRCFILES:.go=.8)
+PROJECTS:=window\
+		testfile\
+		cat\
+		cat_rot13\
+		sortmain\
+		sieve1\
+		sieve\
 
-CAT_SRCFILES=cat.go file.go
-CAT_OBJFILES=$(CAT_SRCFILES:.go=.8)
+all: $(PROJECTS)
 
-CAT_ROT13_SRCFILES=cat_rot13.go file.go
-CAT_ROT13_OBJFILES=$(CAT_ROT13_SRCFILES:.go=.8)
+define upperString
+$(shell echo $1 | tr [a-z] [A-Z] )
+endef
 
-SORTMAIN_SRCFILES=sortmain.go sort.go
-SORTMAIN_OBJFILES=$(SORTMAIN_SRCFILES:.go=.8)
+define PROJECT_template
+$2_SRCFILES += $1.go
+$2_SRCFILES += $($2_DEPENDS)
+$2_DEPEND_OBJS:=$($2_DEPENDS:.go=.8)
 
-SIEVE_SRCFILES=sieve.go
-SIEVE_OBJFILES=$(SIEVE_SRCFILES:.go=.8)
+$2_OBJFILE:=$1.8
+$2_OBJFILES:=$$($2_SRCFILES:.go=.8)
+$2_FMTFILES:=$$($2_SRCFILES:.go=.fmt.tmp)
 
-SIEVE1_SRCFILES=sieve1.go
-SIEVE1_OBJFILES=$(SIEVE1_SRCFILES:.go=.8)
+SRCFILES += $$($2_SRCFILES)
+OBJFILES += $$($2_OBJFILES)
+FMTFILES += $$($2_FMTFILES)
 
-SRCFILES=\
-	$(WINDOW_SRCFILES)\
-	$(TESTFILE_SRCFILES)\
-	$(CAT_SRCFILES)\
-	$(CAT_ROT13_SRCFILES)\
-	$(SORTMAIN_SRCFILES)\
-	$(SIEVE_SRCFILES)\
-	$(SIEVE1_SRCFILES)\
+TARGETS += $1
 
-OBJFILES=$(SRCFILES:.go=.8)
-FMTFILES=$(SRCFILES:.go=.fmt.tmp)
+$$($2_OBJFILE): $$($2_DEPEND_OBJS) $1.go
+$1: $$($2_OBJFILES) 
+endef
+     
+$(foreach project,$(PROJECTS),$(eval $(call PROJECT_template,$(project),$(call upperString,$(project)))))
 
-TARGETS = \
-	window\
-	testfile\
-	cat\
-	cat_rot13\
-	sortmain\
-	sieve\
-	sieve1\
-
-all:$(TARGETS)
-
-window: $(WINDOW_OBJFILES)
-
-testfile: $(TESTFILE_OBJFILES)
-testfile.8: file.8 testfile.go 
-
-cat: $(CAT_OBJFILES)
-cat.8: file.8 cat.go 
-
-cat_rot13: $(CAT_ROT13_OBJFILES)
-cat_rot13.8: file.8 cat_rot13.go 
-
-sortmain: $(SORTMAIN_OBJFILES)
-sortmain.8: sort.8 sortmain.go 
-
-sieve: $(SIEVE_OBJFILES)
-
-sieve1: $(SIEVE1_OBJFILES)
+test:
+	@echo PROJECTS=$(PROJECTS)
+	@echo TARGETS=$(TARGETS)
+	@echo SRCFILES=$(SRCFILES)
+	@echo OBJFILES=$(OBJFILES)
+	@echo FMTFILES=$(FMTFILES)
+	@echo WINDOW_SRCFILES=$(WINDOW_SRCFILES)
+	@echo WINDOW_OBJFILES=$(WINDOW_OBJFILES)
+	@echo WINDOW_FMTFILES=$(WINDOW_FMTFILES)
+	@echo TESTFILE_SRCFILES=$(TESTFILE_SRCFILES)
+	@echo TESTFILE_OBJFILES=$(TESTFILE_OBJFILES)
+	@echo TESTFILE_FMTFILES=$(TESTFILE_FMTFILES)
+	@echo TESTFILE_DEPENDS=$(TESTFILE_DEPENDS)
+	@echo TESTFILE_DEPEND_OBJS=$(TESTFILE_DEPEND_OBJS)
+	@echo TESTFILE_OBJFILE=$(TESTFILE_OBJFILE)
 
 %.8: %.go
 	$(GC) $<
