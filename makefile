@@ -16,6 +16,9 @@ CAT_OBJFILES=$(CAT_SRCFILES:.go=.8)
 CAT_ROT13_SRCFILES=cat_rot13.go file.go
 CAT_ROT13_OBJFILES=$(CAT_ROT13_SRCFILES:.go=.8)
 
+SORTMAIN_SRCFILES=sortmain.go sort.go
+SORTMAIN_OBJFILES=$(SORTMAIN_SRCFILES:.go=.8)
+
 SRCFILES=\
 	$(WINDOW_SRCFILES)\
 	$(TESTFILE_SRCFILES)\
@@ -30,6 +33,7 @@ TARGETS = \
 	testfile\
 	cat\
 	cat_rot13\
+	sortmain\
 
 all:$(TARGETS)
 
@@ -43,6 +47,9 @@ cat.8: file.8 cat.go
 
 cat_rot13: $(CAT_ROT13_OBJFILES)
 cat_rot13.8: file.8 cat_rot13.go 
+
+sortmain: $(SORTMAIN_OBJFILES)
+sortmain.8: sort.8 sortmain.go 
 
 %.8: %.go
 	$(GC) $<
