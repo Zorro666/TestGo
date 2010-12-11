@@ -19,6 +19,7 @@ SRCFILES=\
 	$(CAT_SRCFILES)\
 
 OBJFILES=$(SRCFILES:.go=.8)
+FMTFILES=$(SRCFILES:.go=.fmt.tmp)
 
 TARGETS = \
 	window\
@@ -41,12 +42,19 @@ cat.8: file.8 cat.go
 %: %.8
 	$(LD) -o $@ $<
 
+.PHONY: all clean nuke format
 .SUFFIXES:            # Delete the default suffixes
 
-clean:
+FORCE:
+
+clean: FORCE
 	rm -f $(OBJFILES)
 
 nuke: clean
 	rm -f $(TARGETS)
 
-format: $(SRCFILES)
+%.fmt.tmp: %.go
+	gofmt -tabwidth=4 -w=true $<
+	@rm -f $@
+
+format: FORCE $(FMTFILES)
