@@ -14,8 +14,10 @@ PROJECTS:=window\
 		cat\
 		cat_rot13\
 		sortmain\
-		sieve1\
 		sieve\
+		sieve1\
+		server\
+		server1\
 
 all: $(PROJECTS)
 
