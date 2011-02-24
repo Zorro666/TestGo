@@ -32,7 +32,7 @@ func (p IntArray) Len() int           { return len(p) }
 func (p IntArray) Less(i, j int) bool { return p[i] < p[j] }
 func (p IntArray) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-type FloatArray []float
+type FloatArray []float32
 
 func (p FloatArray) Len() int           { return len(p) }
 func (p FloatArray) Less(i, j int) bool { return p[i] < p[j] }
@@ -47,9 +47,9 @@ func (p StringArray) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 // Convenience wrappers for common cases
 
 func SortInts(a []int)       { Sort(IntArray(a)) }
-func SortFloats(a []float)   { Sort(FloatArray(a)) }
+func SortFloats(a []float32)   { Sort(FloatArray(a)) }
 func SortStrings(a []string) { Sort(StringArray(a)) }
 
 func IntsAreSorted(a []int) bool       { return IsSorted(IntArray(a)) }
-func FloatsAreSorted(a []float) bool   { return IsSorted(FloatArray(a)) }
+func FloatsAreSorted(a []float32) bool   { return IsSorted(FloatArray(a)) }
 func StringsAreSorted(a []string) bool { return IsSorted(StringArray(a)) }

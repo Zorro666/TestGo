@@ -15,8 +15,8 @@ var (
 )
 
 func render(window draw.Window) {
-	var x float = 0.0
-	var y float = 0.0
+	var x float32 = 0.0
+	var y float32 = 0.0
 	var canvas draw.Image = window.Screen()
 
 	for {
