@@ -5,16 +5,15 @@ import "fmt"
 
 import "image"
 import "time"
-import "exp/draw"
-import "exp/draw/x11"
-
-//import "./file"
+import "image/draw"
+import "exp/gui"
+import "exp/gui/x11"
 
 var (
 	red = image.NewColorImage(image.RGBAColor{0xFF, 0, 0, 0xFF})
 )
 
-func render(window draw.Window) {
+func render(window gui.Window) {
 	var x float32 = 0.0
 	var y float32 = 0.0
 	var canvas draw.Image = window.Screen()
@@ -41,7 +40,7 @@ func render(window draw.Window) {
 type Empty interface{}
 
 type MyKeyEvent struct {
-	drawKeyEvent draw.KeyEvent
+	drawKeyEvent gui.KeyEvent
 }
 
 func (keyEvent MyKeyEvent) String() string {
@@ -61,7 +60,7 @@ func (keyEvent MyKeyEvent) String() string {
 }
 
 func main() {
-	var mainWindow draw.Window
+	var mainWindow gui.Window
 	var error os.Error
 	mainWindow, error = x11.NewWindow()
 
@@ -76,18 +75,18 @@ loop:
 	for {
 		var windowEvent Empty = <-mainWindow.EventChan()
 		switch event := windowEvent.(type) {
-		case draw.MouseEvent:
+		case gui.MouseEvent:
 			fmt.Printf("Mouse Event Buttons %d\n", event.Buttons)
-		case draw.KeyEvent:
+		case gui.KeyEvent:
 			var keyEvent MyKeyEvent
 			keyEvent.drawKeyEvent = event
 			fmt.Println("Key Event", keyEvent)
 			if keyEvent.drawKeyEvent.Key == 65307 { // ESC
 				break loop
 			}
-		case draw.ConfigEvent:
+		case gui.ConfigEvent:
 			fmt.Printf("Config Event\n")
-		case draw.ErrEvent:
+		case gui.ErrEvent:
 			fmt.Printf("Error Event\n")
 			break loop
 		}
