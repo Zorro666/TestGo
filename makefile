@@ -18,6 +18,7 @@ PROJECTS:=window\
 		sieve1\
 		server\
 		server1\
+		filter\
 
 all: $(PROJECTS)
 
