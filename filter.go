@@ -11,6 +11,8 @@ import "image/draw"
 import "exp/gui"
 import "exp/gui/x11"
 
+import "./lj_wav_file"
+
 var (
 	red = image.NewColorImage(image.RGBAColor{0xFF, 0, 0, 0xFF})
 	green = image.NewColorImage(image.RGBAColor{0x00, 0xFF, 0, 0xFF})
@@ -113,7 +115,6 @@ func renderFrame(canvas draw.Image) {
 
 		draw.Draw(canvas, canvas.Bounds(), image.Transparent, image.ZP, draw.Src)
 		log.Println("Clear Image", canvas.Bounds())
-		//log.Printf("viFreq %f f0 %f sampleRate %f Q %f vbp=red vlp=green vhp=blue\n", g_viFreq, g_f0, g_sampleRate, g_Q)
 		log.Printf("viFreq %f f0 %f sampleRate %f Q %f vbp=red vlp=green vhp=blue\n", g_viFreq, g_f0, g_sampleRate, g_Q)
 		g_clearImage = false
 	}
@@ -298,6 +299,9 @@ func handleKeyEvent(keyEvent gui.KeyEvent) {
 			g_vlp = 0.0
 			g_clearImage = true
 		}
+		if key == 'w' {
+			saveWavFile()
+		}
 		if key == 'd' {
 			g_debugLevel += 1
 		}
@@ -350,6 +354,32 @@ func handleKeyEvent(keyEvent gui.KeyEvent) {
 
 type Empty interface{}
 
+func saveWavFile() {
+	result := lj_wav_file.LJ_WAV_ERROR
+	filename := "test.wav"
+	format := lj_wav_file.LJ_WAV_FORMAT_PCM
+	var numChannels uint32 = 1
+	var sampleRate uint32 = 44000
+	var numBytesPerChannel uint32 = 2
+	wavFile := lj_wav_file.LJ_WAV_create(filename, format, numChannels, sampleRate, numBytesPerChannel)
+	if wavFile == nil {
+		log.Fatalf("ERROR creating wav file:'%s'", filename)
+	}
+	var sample uint16 = 1000
+	result = lj_wav_file.LJ_WAV_FILE_writeChannel(wavFile, sample)
+	result = lj_wav_file.LJ_WAV_FILE_writeChannel(wavFile, sample)
+	result = lj_wav_file.LJ_WAV_FILE_writeChannel(wavFile, sample)
+	result = lj_wav_file.LJ_WAV_FILE_writeChannel(wavFile, sample)
+	result = lj_wav_file.LJ_WAV_FILE_writeChannel(wavFile, sample)
+	result = lj_wav_file.LJ_WAV_FILE_writeChannel(wavFile, sample)
+
+	result = lj_wav_file.LJ_WAV_close(wavFile)
+	if result != lj_wav_file.LJ_WAV_OK {
+		log.Fatalf("ERROR during LJ_WAV_close:'%s'", filename)
+	}
+	log.Printf("Saved WAV file '%s'\n", filename)
+}
+
 func main() {
 	var mainWindow gui.Window
 	var error os.Error
@@ -357,8 +387,7 @@ func main() {
 	mainWindow, error = x11.NewWindow()
 
 	if error != nil {
-		log.Printf("%s", error.String())
-		os.Exit(-1)
+		log.Fatalf("%s", error.String())
 	}
 
 	g_graphDisplayMask = 0xFF

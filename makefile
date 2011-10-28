@@ -8,6 +8,7 @@ TESTFILE_DEPENDS:=file.go
 CAT_DEPENDS:=file.go
 CAT_ROT13_DEPENDS:=file.go
 SORTMAIN_DEPENDS:=sort.go
+FILTER_DEPENDS:=bufferOutput.go lj_wav_file.go
 
 PROJECTS:=window\
 		testfile\
