@@ -2,7 +2,7 @@ package lj_wav_file
 
 import "os"
 import "log"
-import "./bufferOutput"
+import "encoding/binary"
 
 const LJ_WAV_FORMAT_PCM uint16 = 0x1
 const LJ_WAV_FORMAT_IEEE_FLOAT uint16 = 0x3
@@ -80,20 +80,26 @@ func lj_wav_riff_header_size() (size int) {
 }
 
 func (riffHeader *lj_wav_riff_header) write(file *os.File) (ok bool, err os.Error) {
-	var buffer bufferOutput.BufferOutput
-	buffer.Create(128)
-	//chunkID uint32								// "RIFF"
-	buffer.AddUint32(riffHeader.chunkID)
-	//chunkSize uint32							// 4+chunkDataSize
-	buffer.AddUint32(riffHeader.chunkSize)
-	//wavID uint32									// "WAVE"
-	buffer.AddUint32(riffHeader.wavID)
-
 	ok = false
-	n, err := buffer.Write(file)
-	if n == lj_wav_riff_header_size() {
-		ok = true
+
+	//chunkID uint32								// "RIFF"
+	//chunkSize uint32							// 4+chunkDataSize
+	//wavID uint32									// "WAVE"
+
+	err = binary.Write(file, binary.LittleEndian, riffHeader.chunkID)
+	if err != nil {
+		return
 	}
+	err = binary.Write(file, binary.LittleEndian, riffHeader.chunkSize)
+	if err != nil {
+		return
+	}
+	err = binary.Write(file, binary.LittleEndian, riffHeader.wavID)
+	if err != nil {
+		return
+	}
+
+	ok = true
 	return
 }
 
@@ -114,30 +120,51 @@ func lj_wav_format_header_size() (size int) {
 }
 
 func (formatHeader *lj_wav_format_header) write(file *os.File) (ok bool, err os.Error) {
-	var buffer bufferOutput.BufferOutput
-	buffer.Create(128)
-	//chunkID uint32								// "fmt "
-	buffer.AddUint32(formatHeader.chunkID)
-	//chunkSize uint32							// 16
-	buffer.AddUint32(formatHeader.chunkSize)
-	//wFormatTag uint16							// PCM=0x1, IEEE_FLOAT=0x3, ALAW=0x6, MULAW=0x7, EXTENSIBLE = 0xFFFE
-	buffer.AddUint16(formatHeader.wFormatTag)
-	//nChannels uint16							// number of interleaved channels
-	buffer.AddUint16(formatHeader.nChannels)
-	//nSamplesPerSec uint32					// sampling rate (blocks per second)
-	buffer.AddUint32(formatHeader.nSamplesPerSec)
-	//nAvgBytesPerSec uint32				// data rate (bytes per second)
-	buffer.AddUint32(formatHeader.nAvgBytesPerSec)
-	//nBlockAlign uint16						// data block size in bytes
-	buffer.AddUint16(formatHeader.nBlockAlign)
-	//wBitsPerSample uint16					// bits per sample
-	buffer.AddUint16(formatHeader.wBitsPerSample)
-
 	ok = false
-	n, err := buffer.Write(file)
-	if n == lj_wav_format_header_size() {
-		ok = true
+
+	//chunkID uint32								// "fmt "
+	//chunkSize uint32							// 16
+	//wFormatTag uint16							// PCM=0x1, IEEE_FLOAT=0x3, ALAW=0x6, MULAW=0x7, EXTENSIBLE = 0xFFFE
+	//nChannels uint16							// number of interleaved channels
+	//nSamplesPerSec uint32					// sampling rate (blocks per second)
+	//nAvgBytesPerSec uint32				// data rate (bytes per second)
+	//nBlockAlign uint16						// data block size in bytes
+	//wBitsPerSample uint16					// bits per sample
+
+	err = binary.Write(file, binary.LittleEndian, formatHeader.chunkID)
+	if err != nil {
+		return
 	}
+	err = binary.Write(file, binary.LittleEndian, formatHeader.chunkSize)
+	if err != nil {
+		return
+	}
+	err = binary.Write(file, binary.LittleEndian, formatHeader.wFormatTag)
+	if err != nil {
+		return
+	}
+	err = binary.Write(file, binary.LittleEndian, formatHeader.nChannels)
+	if err != nil {
+		return
+	}
+	err = binary.Write(file, binary.LittleEndian, formatHeader.nSamplesPerSec)
+	if err != nil {
+		return
+	}
+	err = binary.Write(file, binary.LittleEndian, formatHeader.nAvgBytesPerSec)
+	if err != nil {
+		return
+	}
+	err = binary.Write(file, binary.LittleEndian, formatHeader.nBlockAlign)
+	if err != nil {
+		return
+	}
+	err = binary.Write(file, binary.LittleEndian, formatHeader.wBitsPerSample)
+	if err != nil {
+		return
+	}
+
+	ok = true
 	return
 }
 
@@ -152,18 +179,21 @@ func lj_wav_data_header_size() (size int) {
 }
 
 func (dataHeader *lj_wav_data_header) write(file *os.File) (ok bool, err os.Error) {
-	var buffer bufferOutput.BufferOutput
-	buffer.Create(128)
-	//chunkID uint32								// "data"
-	buffer.AddUint32(dataHeader.chunkID)
-	//chunkSize uint32							// wBitsPerSamples * 8 * nChannels * numSamples
-	buffer.AddUint32(dataHeader.chunkSize)
-
 	ok = false
-	n, err := buffer.Write(file)
-	if n == lj_wav_data_header_size() {
-		ok = true
+
+	//chunkID uint32								// "data"
+	//chunkSize uint32							// wBitsPerSamples * 8 * nChannels * numSamples
+
+	err = binary.Write(file, binary.LittleEndian, dataHeader.chunkID)
+	if err != nil {
+		return
 	}
+	err = binary.Write(file, binary.LittleEndian, dataHeader.chunkSize)
+	if err != nil {
+		return
+	}
+
+	ok = true
 	return
 }
 
@@ -264,11 +294,7 @@ func LJ_WAV_FILE_writeChannel(wavFile *LJ_WAV_FILE, sampleData uint16) (result i
 		return
 	}
 
-	var buffer bufferOutput.BufferOutput
-	buffer.Create(2)
-	buffer.Reset()
-	buffer.AddUint16(sampleData)
-	buffer.Write(wavFile.file)
+	binary.Write(wavFile.file, binary.LittleEndian, sampleData)
 	wavFile.numBytesWritten += wavFile.numBytesPerChannel
 
 	return LJ_WAV_OK
@@ -284,9 +310,6 @@ func LJ_WAV_close(wavFile *LJ_WAV_FILE) (result int) {
 
 	defer	wavFile.file.Close()
 
-	var buffer bufferOutput.BufferOutput
-	buffer.Create(4)
-
 	var dataChunkSize uint32 = wavFile.numBytesWritten
 	var riffChunkSize uint32 = 4 + (8 + 16) + (8 + dataChunkSize)
 
@@ -297,14 +320,7 @@ func LJ_WAV_close(wavFile *LJ_WAV_FILE) (result int) {
 		log.Printf("LJ_WAV_close: seek riffChunkSize:%d failed error:%s\n", riffChunkSizeOffset, err.String())
 		return
 	}
-	buffer.Reset()
-	buffer.AddUint32(riffChunkSize)
-	n, err := buffer.Write(wavFile.file)
-	if n != 4 {
-		log.Printf("LJ_WAV_close: error writing riffChunkSize:%d at offset:%d bad number of bytes written:%d expected:4\n", 
-							 riffChunkSize, riffChunkSizeOffset, n)
-		return
-	}
+	err = binary.Write(wavFile.file, binary.LittleEndian, riffChunkSize)
 	if err != nil {
 		log.Printf("LJ_WAV_close: error writing riffChunkSize:%d at offset:%d error:%s\n", riffChunkSize, riffChunkSizeOffset, err.String())
 		return
@@ -316,14 +332,7 @@ func LJ_WAV_close(wavFile *LJ_WAV_FILE) (result int) {
 		log.Printf("LJ_WAV_close: seek dataChunkSize:%d failed error:%s\n", dataChunkSizeOffset, err.String())
 		return
 	}
-	buffer.Reset()
-	buffer.AddUint32(dataChunkSize)
-	n, err = buffer.Write(wavFile.file)
-	if n != 4 {
-		log.Printf("LJ_WAV_close: error writing dataChunkSize:%d at offset:%d bad number of bytes written:%d expected:4\n", 
-							 dataChunkSize, dataChunkSizeOffset, n)
-		return
-	}
+	err = binary.Write(wavFile.file, binary.LittleEndian, dataChunkSize)
 	if err != nil {
 		log.Printf("LJ_WAV_close: error writing dataChunkSize:%d at offset:%d error:%s\n", dataChunkSize, dataChunkSizeOffset, err.String())
 		return
