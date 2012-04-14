@@ -79,7 +79,7 @@ func lj_wav_riff_header_size() (size int) {
 	return
 }
 
-func (riffHeader *lj_wav_riff_header) write(file *os.File) (ok bool, err os.Error) {
+func (riffHeader *lj_wav_riff_header) write(file *os.File) (ok bool, err error) {
 	ok = false
 
 	//chunkID uint32								// "RIFF"
@@ -119,7 +119,7 @@ func lj_wav_format_header_size() (size int) {
 	return
 }
 
-func (formatHeader *lj_wav_format_header) write(file *os.File) (ok bool, err os.Error) {
+func (formatHeader *lj_wav_format_header) write(file *os.File) (ok bool, err error) {
 	ok = false
 
 	//chunkID uint32								// "fmt "
@@ -178,7 +178,7 @@ func lj_wav_data_header_size() (size int) {
 	return
 }
 
-func (dataHeader *lj_wav_data_header) write(file *os.File) (ok bool, err os.Error) {
+func (dataHeader *lj_wav_data_header) write(file *os.File) (ok bool, err error) {
 	ok = false
 
 	//chunkID uint32								// "data"
@@ -232,7 +232,7 @@ func LJ_WAV_create(filename string, format uint16, numChannels uint32, sampleRat
 	file, err := os.Create(filename)
 
 	if file == nil || err != nil {
-		log.Printf("LJ_WAV_create: failed to open output file '%s' error:%s\n", filename, err.String())
+		log.Printf("LJ_WAV_create: failed to open output file '%s' error:%s\n", filename, err.Error())
 		file.Close()
 		return
 	}
@@ -242,7 +242,7 @@ func LJ_WAV_create(filename string, format uint16, numChannels uint32, sampleRat
 	riffHeader.wavID = lj_makefourcc('W','A','V','E')
 	ok, err = riffHeader.write(file)
 	if ok == false || err != nil {
-		log.Printf("LJ_WAV_create: failed to write WAV_RIFF_HEADER file '%s' error:%s\n", filename, err.String())
+		log.Printf("LJ_WAV_create: failed to write WAV_RIFF_HEADER file '%s' error:%s\n", filename, err.Error())
 		file.Close()
 		return nil
 	}
@@ -257,7 +257,7 @@ func LJ_WAV_create(filename string, format uint16, numChannels uint32, sampleRat
 	wavHeader.wBitsPerSample = uint16(8 * numBytesPerChannel)
 	ok, err = wavHeader.write(file)
 	if ok == false || err != nil {
-		log.Printf("LJ_WAV_create: failed to write WAV_FORMAT_HEADER file '%s' error:%s\n", filename, err.String())
+		log.Printf("LJ_WAV_create: failed to write WAV_FORMAT_HEADER file '%s' error:%s\n", filename, err.Error())
 		file.Close()
 		return nil
 	}
@@ -266,7 +266,7 @@ func LJ_WAV_create(filename string, format uint16, numChannels uint32, sampleRat
 	dataHeader.chunkSize = 0 // wBitsPerSamples * 8 * nChannels * numSamples
 	ok, err = dataHeader.write(file)
 	if ok == false || err != nil {
-		log.Printf("LJ_WAV_create: failed to write WAV_DATA_HEADER file '%s' error:%s\n", filename, err.String())
+		log.Printf("LJ_WAV_create: failed to write WAV_DATA_HEADER file '%s' error:%s\n", filename, err.Error())
 		file.Close()
 		return nil
 	}
@@ -317,24 +317,24 @@ func LJ_WAV_close(wavFile *LJ_WAV_FILE) (result int) {
 	var riffChunkSizeOffset int64 = 4
 	_, err := wavFile.file.Seek(riffChunkSizeOffset, 0)
 	if err != nil {
-		log.Printf("LJ_WAV_close: seek riffChunkSize:%d failed error:%s\n", riffChunkSizeOffset, err.String())
+		log.Printf("LJ_WAV_close: seek riffChunkSize:%d failed error:%s\n", riffChunkSizeOffset, err.Error())
 		return
 	}
 	err = binary.Write(wavFile.file, binary.LittleEndian, riffChunkSize)
 	if err != nil {
-		log.Printf("LJ_WAV_close: error writing riffChunkSize:%d at offset:%d error:%s\n", riffChunkSize, riffChunkSizeOffset, err.String())
+		log.Printf("LJ_WAV_close: error writing riffChunkSize:%d at offset:%d error:%s\n", riffChunkSize, riffChunkSizeOffset, err.Error())
 		return
 	}
 
 	var dataChunkSizeOffset int64 = int64(lj_wav_riff_header_size() + lj_wav_format_header_size() + 4)
 	_, err = wavFile.file.Seek(dataChunkSizeOffset, 0)
 	if err != nil {
-		log.Printf("LJ_WAV_close: seek dataChunkSize:%d failed error:%s\n", dataChunkSizeOffset, err.String())
+		log.Printf("LJ_WAV_close: seek dataChunkSize:%d failed error:%s\n", dataChunkSizeOffset, err.Error())
 		return
 	}
 	err = binary.Write(wavFile.file, binary.LittleEndian, dataChunkSize)
 	if err != nil {
-		log.Printf("LJ_WAV_close: error writing dataChunkSize:%d at offset:%d error:%s\n", dataChunkSize, dataChunkSizeOffset, err.String())
+		log.Printf("LJ_WAV_close: error writing dataChunkSize:%d at offset:%d error:%s\n", dataChunkSize, dataChunkSizeOffset, err.Error())
 		return
 	}
 

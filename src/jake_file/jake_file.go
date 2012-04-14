@@ -1,20 +1,20 @@
-package file
+package jake_file
 
 import (
 	"os"
 	"syscall"
 )
 
-type File struct {
+type Jake_File struct {
 	fd   int    // file descriptor number
 	name string // file name at Open time
 }
 
-func newFile(fd int, name string) *File {
+func newFile(fd int, name string) *Jake_File {
 	if fd < 0 {
 		return nil
 	}
-	return &File{fd, name}
+	return &Jake_File{fd, name}
 }
 
 var (
@@ -23,48 +23,48 @@ var (
 	Stderr = newFile(2, "/dev/stderr")
 )
 
-func Open(name string, mode int, perm uint32) (file *File, err os.Error) {
+func Open(name string, mode int, perm uint32) (file *Jake_File, err error) {
 	r, e := syscall.Open(name, mode, perm)
-	if e != 0 {
-		err = os.Errno(e)
+	if e != nil {
+		err = e
 	}
 	return newFile(r, name), err
 }
 
-func (file *File) Close() os.Error {
+func (file *Jake_File) Close() error {
 	if file == nil {
-		return os.EINVAL
+		return os.ErrInvalid
 	}
 	e := syscall.Close(file.fd)
 	file.fd = -1 // so it can't be closed again
-	if e != 0 {
-		return os.Errno(e)
+	if e != nil {
+		return e
 	}
 	return nil
 }
 
-func (file *File) Read(b []byte) (ret int, err os.Error) {
+func (file *Jake_File) Read(b []byte) (ret int, err error) {
 	if file == nil {
-		return -1, os.EINVAL
+		return -1, os.ErrInvalid
 	}
 	r, e := syscall.Read(file.fd, b)
-	if e != 0 {
-		err = os.Errno(e)
+	if e != nil {
+		err = e
 	}
 	return int(r), err
 }
 
-func (file *File) Write(b []byte) (ret int, err os.Error) {
+func (file *Jake_File) Write(b []byte) (ret int, err error) {
 	if file == nil {
-		return -1, os.EINVAL
+		return -1, os.ErrInvalid
 	}
 	r, e := syscall.Write(file.fd, b)
-	if e != 0 {
-		err = os.Errno(e)
+	if e != nil {
+		err = e
 	}
 	return int(r), err
 }
 
-func (file *File) String() string {
+func (file *Jake_File) String() string {
 	return file.name
 }

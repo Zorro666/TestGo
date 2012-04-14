@@ -16,7 +16,7 @@ func (buffer *BufferOutput) Reset() {
 	buffer.pos = 0
 }
 
-func (buffer *BufferOutput) Write(file *os.File) (n int, err os.Error) {
+func (buffer *BufferOutput) Write(file *os.File) (n int, err error) {
 	n, err = file.Write(buffer.data[:buffer.pos])
 	buffer.pos = 0
 	return
