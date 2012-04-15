@@ -11,5 +11,6 @@ sieve1
 server
 server1
 filter
+test_xgb
 pkg/
 src/code.google.com/
