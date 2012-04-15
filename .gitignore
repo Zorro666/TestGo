@@ -12,5 +12,6 @@ server
 server1
 filter
 test_xgb
+test_jake_graphics
 pkg/
 src/code.google.com/
