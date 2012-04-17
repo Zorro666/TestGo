@@ -4,12 +4,19 @@ import (
 		"os"
 		"fmt"
 		"code.google.com/p/x-go-binding/xgb"
+		"image"
+		"image/color"
+		"image/draw"
 		)
 
 type Jake_Graphics struct {
 	m_c* xgb.Conn
 	m_win xgb.Id
 	m_gc xgb.Id
+	m_drawable xgb.Id
+ 	m_backbuffer *image.RGBA
+	m_windowWidth int
+	m_windowHeight int
 }
 
 func NewInstance() *Jake_Graphics {
@@ -23,7 +30,11 @@ func NewInstance() *Jake_Graphics {
 	return &jg
 }
 
-func (jg* Jake_Graphics) CreateWindow(width uint16, height uint16) bool {
+func (jg* Jake_Graphics) GetBackBuffer() draw.Image {
+	return jg.m_backbuffer
+}
+
+func (jg* Jake_Graphics) CreateWindow(width int, height int, x0 int, y0 int) bool {
 	if (jg.m_c == nil) {
 			fmt.Printf("Jake_Graphics: connection is null\n")
 			return false
@@ -31,12 +42,45 @@ func (jg* Jake_Graphics) CreateWindow(width uint16, height uint16) bool {
 
 	jg.m_win = jg.m_c.NewId()
 	jg.m_gc = jg.m_c.NewId()
+	jg.m_drawable = jg.m_c.NewId()
+	jg.m_windowWidth = width
+	jg.m_windowHeight = height
 
-	jg.m_c.CreateWindow(0, jg.m_win, jg.m_c.DefaultScreen().Root, 100, 100, width, height, 0, 0, 0, 0, nil)
+	var depth byte = 0
+
+	jg.m_c.CreateWindow(depth, jg.m_win, jg.m_c.DefaultScreen().Root, 
+										  int16(x0), int16(y0), uint16(width), uint16(height), 0, 0, 0, 0, nil)
 	jg.m_c.CreateGC(jg.m_gc, jg.m_win, 0, nil)
+
 	jg.m_c.MapWindow(jg.m_win)
+	r := image.Rect(0, 0, width, height)
+	jg.m_backbuffer = image.NewRGBA(r)
+	img := jg.GetBackBuffer()
+
+	red := color.RGBA{0xFF, 0, 0, 0xFF}
+
+	img.Set(10, 10, red)
+	img.Set(20, 20, red)
+	img.Set(30, 30, red)
+	img.Set(40, 40, red)
+	img.Set(50, 50, red)
+
+	jg.FlipBackBuffer()
 	return true
 }
+
+func (jg* Jake_Graphics) FlipBackBuffer() {
+	var format byte = xgb.ImageFormatZPixmap
+	dstX := 0
+	dstY := 0
+	width := jg.m_windowWidth
+	height := jg.m_windowHeight
+	var leftPad byte = 0
+	var depth byte = 32
+	var data []byte = jg.m_backbuffer.Pix
+	jg.m_c.PutImage(format, jg.m_win, jg.m_gc, uint16(width), uint16(height), int16(dstX), int16(dstY), leftPad, depth, data)
+}
+
 
 /*
 func main() {
