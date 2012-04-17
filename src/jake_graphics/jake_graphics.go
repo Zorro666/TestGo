@@ -14,7 +14,7 @@ type Jake_Graphics struct {
 	m_win xgb.Id
 	m_gc xgb.Id
 	m_drawable xgb.Id
- 	m_backbuffer *image.RGBA
+	m_backbuffer *image.RGBA
 	m_windowWidth int
 	m_windowHeight int
 }
@@ -50,9 +50,10 @@ func (jg* Jake_Graphics) CreateWindow(width int, height int, x0 int, y0 int) boo
 
 	jg.m_c.CreateWindow(depth, jg.m_win, jg.m_c.DefaultScreen().Root, 
 										  int16(x0), int16(y0), uint16(width), uint16(height), 0, 0, 0, 0, nil)
+	jg.m_c.ChangeWindowAttributes(jg.m_win, xgb.CWEventMask, []uint32{xgb.EventMaskExposure | xgb.EventMaskKeyRelease})
 	jg.m_c.CreateGC(jg.m_gc, jg.m_win, 0, nil)
-
 	jg.m_c.MapWindow(jg.m_win)
+
 	r := image.Rect(0, 0, width, height)
 	jg.m_backbuffer = image.NewRGBA(r)
 	img := jg.GetBackBuffer()
@@ -76,11 +77,18 @@ func (jg* Jake_Graphics) FlipBackBuffer() {
 	width := jg.m_windowWidth
 	height := jg.m_windowHeight
 	var leftPad byte = 0
-	var depth byte = 32
+	var depth byte = 24
 	var data []byte = jg.m_backbuffer.Pix
 	jg.m_c.PutImage(format, jg.m_win, jg.m_gc, uint16(width), uint16(height), int16(dstX), int16(dstY), leftPad, depth, data)
 }
 
+func (jg* Jake_Graphics) WaitForEvent() {
+  _, err := jg.m_c.WaitForEvent()
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+		os.Exit(1)
+	}
+}
 
 /*
 func main() {
