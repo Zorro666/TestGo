@@ -4,7 +4,6 @@ import "os"
 import "fmt"
 import "code.google.com/p/x-go-binding/xgb"
 import "image"
-import "image/color"
 import "image/draw"
 
 type WindowEvent interface{}
@@ -84,21 +83,6 @@ func (jg* Jake_Graphics) CreateWindow(width int, height int, x0 int, y0 int) boo
 
 	r := image.Rect(0, 0, width, height)
 	jg.m_backbuffer = image.NewRGBA(r)
-	img := jg.GetBackBuffer()
-
-	red := color.RGBA{0xFF, 0, 0, 0xFF}
-	green := color.RGBA{0, 0xFF, 0, 0xFF}
-	blue := color.RGBA{0, 0, 0xFF, 0xFF}
-
-	img.Set(10, 10, red)
-	img.Set(20, 20, green)
-	img.Set(30, 30, green)
-	img.Set(40, 40, blue)
-	img.Set(50, 50, blue)
-	img.Set(100, 100, blue)
-	img.Set(200, 200, green)
-	img.Set(300, 300, red)
-
 	jg.FlipBackBuffer()
 	return true
 }
