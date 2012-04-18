@@ -13,7 +13,7 @@ import (
 
 func main() {
 	jg := jake_graphics.NewInstance()
-	jg.CreateWindow(250, 250, 100, 100)
+	jg.CreateWindow(400, 400, 100, 100)
 
 	for {
 		 fmt.Printf("Flip\n")
