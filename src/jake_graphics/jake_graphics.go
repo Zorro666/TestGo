@@ -78,9 +78,24 @@ func (jg* Jake_Graphics) FlipBackBuffer() {
 	dstY := 0
 	width := jg.m_windowWidth
 	height := jg.m_windowHeight
+	backbuffer := jg.m_backbuffer
+
 	var leftPad byte = 0
 	var depth byte = 24
-	var data []byte = jg.m_backbuffer.Pix
+
+	storage := make([]byte, 0, 256*256*4)
+	data := storage[:width*height*4]
+
+	for y:= 0; y < height; y++ {
+		 for x:= 0; x < width; x++ {
+		   pixel := backbuffer.At(x,y)
+			 red, green, blue, _ := pixel.RGBA()
+			 i := 4*(y*width+x)
+			 data[i+0] = byte(blue)
+			 data[i+1] = byte(green)
+			 data[i+2] = byte(red)
+		 }
+	}
 	jg.m_c.PutImage(format, jg.m_win, jg.m_gc, uint16(width), uint16(height), int16(dstX), int16(dstY), leftPad, depth, data)
 }
 
