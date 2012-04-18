@@ -1,22 +1,18 @@
 package main
 
-import "os"
 import "fmt"
 
-import "image"
 import "time"
 import "image/draw"
-import "exp/gui"
-import "exp/gui/x11"
+import "image/color"
+import "jake_graphics"
 
-var (
-	red = image.NewColorImage(image.RGBAColor{0xFF, 0, 0, 0xFF})
-)
+var red = color.RGBA{0xFF, 0, 0, 0xFF}
 
-func render(window gui.Window) {
+func render(jg *jake_graphics.Jake_Graphics) {
 	var x float32 = 0.0
 	var y float32 = 0.0
-	var canvas draw.Image = window.Screen()
+	var canvas draw.Image = jg.GetBackBuffer()
 
 	for {
 		x = x + 1
@@ -32,7 +28,7 @@ func render(window gui.Window) {
 		var iy int = int(y)
 		canvas.Set(ix, iy, red)
 
-		window.FlushImage()
+		jg.FlipBackBuffer()
 		time.Sleep(1)
 	}
 }
@@ -40,7 +36,7 @@ func render(window gui.Window) {
 type Empty interface{}
 
 type MyKeyEvent struct {
-	drawKeyEvent gui.KeyEvent
+	drawKeyEvent jake_graphics.KeyEvent
 }
 
 func (keyEvent MyKeyEvent) String() string {
@@ -60,37 +56,27 @@ func (keyEvent MyKeyEvent) String() string {
 }
 
 func main() {
-	var mainWindow gui.Window
-	var error os.Error
-	mainWindow, error = x11.NewWindow()
+	jg := jake_graphics.NewInstance()
+	jg.CreateWindow(400, 400, 100, 100)
 
-	if error != nil {
-		fmt.Printf("%s", error.String())
-		os.Exit(-1)
-	}
-
-	go render(mainWindow)
+	go render(jg)
 
 loop:
 	for {
-		var windowEvent Empty = <-mainWindow.EventChan()
+		windowEvent := jg.WaitForEvent()
 		switch event := windowEvent.(type) {
-		case gui.MouseEvent:
-			fmt.Printf("Mouse Event Buttons %d\n", event.Buttons)
-		case gui.KeyEvent:
-			var keyEvent MyKeyEvent
-			keyEvent.drawKeyEvent = event
-			fmt.Println("Key Event", keyEvent)
-			if keyEvent.drawKeyEvent.Key == 65307 { // ESC
-				break loop
-			}
-		case gui.ConfigEvent:
-			fmt.Printf("Config Event\n")
-		case gui.ErrEvent:
-			fmt.Printf("Error Event\n")
-			break loop
+		  case jake_graphics.MouseButtonEvent:
+			  fmt.Printf("Mouse Event Buttons %d %d,%d\n", event.Buttons, event.X, event.Y)
+		  case jake_graphics.MouseMoveEvent:
+			  fmt.Printf("Mouse Event Motion %d,%d\n", event.X, event.Y)
+		  case jake_graphics.KeyEvent:
+			  var keyEvent MyKeyEvent
+			  keyEvent.drawKeyEvent = event
+			  fmt.Println("Key Event", keyEvent)
+			  if keyEvent.drawKeyEvent.Key == 9 { // ESC
+				  break loop
+			  }
 		}
-
 	}
-	error = mainWindow.Close()
+	jg.CloseWindow()
 }
