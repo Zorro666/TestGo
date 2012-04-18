@@ -67,6 +67,9 @@ func (jg* Jake_Graphics) CreateWindow(width int, height int, x0 int, y0 int) boo
 	img.Set(30, 30, green)
 	img.Set(40, 40, blue)
 	img.Set(50, 50, blue)
+	img.Set(100, 100, blue)
+	img.Set(200, 200, green)
+	img.Set(300, 300, red)
 
 	jg.FlipBackBuffer()
 	return true
@@ -74,29 +77,44 @@ func (jg* Jake_Graphics) CreateWindow(width int, height int, x0 int, y0 int) boo
 
 func (jg* Jake_Graphics) FlipBackBuffer() {
 	var format byte = xgb.ImageFormatZPixmap
-	dstX := 0
-	dstY := 0
-	width := jg.m_windowWidth
-	height := jg.m_windowHeight
+	widthLeft := jg.m_windowWidth
+	heightLeft := jg.m_windowHeight
 	backbuffer := jg.m_backbuffer
 
 	var leftPad byte = 0
 	var depth byte = 24
 
 	storage := make([]byte, 0, 256*256*4)
-	data := storage[:width*height*4]
+	width := widthLeft
+	height := heightLeft
 
-	for y:= 0; y < height; y++ {
-		 for x:= 0; x < width; x++ {
-		   pixel := backbuffer.At(x,y)
-			 red, green, blue, _ := pixel.RGBA()
-			 i := 4*(y*width+x)
-			 data[i+0] = byte(blue)
-			 data[i+1] = byte(green)
-			 data[i+2] = byte(red)
-		 }
+	dstX := 0
+	dstY := 0
+  for {
+	  maxBytes:= 256*256
+		if (width*height >= maxBytes) {
+	    height = maxBytes/width
+    }
+	  data := storage[:width*height*4]
+
+		for y:= 0; y < height; y++ {
+			for x:= 0; x < width; x++ {
+		    pixel := backbuffer.At(x+dstX,y+dstY)
+				red, green, blue, _ := pixel.RGBA()
+				i := 4*(y*width+x)
+				data[i+0] = byte(blue)
+				data[i+1] = byte(green)
+				data[i+2] = byte(red)
+			}
+		}
+		jg.m_c.PutImage(format, jg.m_win, jg.m_gc, uint16(width), uint16(height), int16(dstX), int16(dstY), leftPad, depth, data)
+    dstY += height
+		heightLeft -= height
+		height = heightLeft
+		if heightLeft <= 0 {
+			break
+    }
 	}
-	jg.m_c.PutImage(format, jg.m_win, jg.m_gc, uint16(width), uint16(height), int16(dstX), int16(dstY), leftPad, depth, data)
 }
 
 func (jg* Jake_Graphics) WaitForEvent() {
