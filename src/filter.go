@@ -1,6 +1,5 @@
 package main
 
-import "os"
 import "log"
 import "fmt"
 
@@ -8,17 +7,16 @@ import "math"
 import "image"
 import "time"
 import "image/draw"
-import "exp/gui"
-import "exp/gui/x11"
-
-import "./lj_wav_file"
+import "image/color"
+import "jake_graphics"
+import "lj_wav_file"
 
 var (
-	red = image.NewColorImage(image.RGBAColor{0xFF, 0, 0, 0xFF})
-	green = image.NewColorImage(image.RGBAColor{0x00, 0xFF, 0, 0xFF})
-	blue = image.NewColorImage(image.RGBAColor{0x00, 0, 0xFF, 0xFF})
-	yellow = image.NewColorImage(image.RGBAColor{0xFF, 0xFF, 0x00, 0xFF})
-	white = image.NewColorImage(image.RGBAColor{0xFF, 0xFF, 0xFF, 0xFF})
+	red = color.RGBA{0xFF, 0x00, 0x00, 0xFF}
+	green = color.RGBA{0x00, 0xFF, 0x00, 0xFF}
+	blue = color.RGBA{0x00, 0x00, 0xFF, 0xFF}
+	yellow = color.RGBA{0xFF, 0xFF, 0x00, 0xFF}
+	white = color.RGBA{0xFF, 0xFF, 0xFF, 0xFF}
 )
 
 var g_debugLevel int = 0
@@ -46,7 +44,7 @@ var g_vbp float64 = 0.0
 var g_vhp float64 = 0.0
 var g_vlp float64 = 0.0
 
-func plotpixel(canvas draw.Image, x float64, y float64, colour image.Color) {
+func plotpixel(canvas draw.Image, x float64, y float64, colour color.Color) {
 	var ix int = int((x-g_xOrigin)*g_xScale)
 	var iy int = int(g_graphHeight)-int((y-g_yOrigin)*g_yScale)
 	canvas.Set(ix, iy, colour)
@@ -85,13 +83,13 @@ func zoomGraph(factor float64, zoomWindowCentre image.Point) {
 	Log("New: origin:%f,%f scale:%f,%f\n", g_xOrigin, g_yOrigin, g_xScale, g_yScale)
 }
 
-func render(window gui.Window) {
+func render(jg *jake_graphics.Jake_Graphics) {
 
 	for {
 		if g_clearImage == true {
-			var canvas draw.Image = window.Screen()
+			var canvas draw.Image = jg.GetBackBuffer()
 			renderFrame(canvas)
-			window.FlushImage()
+			jg.FlipBackBuffer()
 		}
 		time.Sleep(1)
 	}
@@ -154,9 +152,9 @@ func renderFrame(canvas draw.Image) {
 
 	for {
 		x = x + 1
-		var vi0 float64 = math.Fabs(math.Sin(vi_K0*(x+vi_phi0)))
-		var vi1 float64 = math.Fabs(math.Sin(vi_K1*(x+vi_phi1)))
-		var vi2 float64 = math.Fabs(math.Sin(vi_K2*(x+vi_phi2)))
+		var vi0 float64 = math.Abs(math.Sin(vi_K0*(x+vi_phi0)))
+		var vi1 float64 = math.Abs(math.Sin(vi_K1*(x+vi_phi1)))
+		var vi2 float64 = math.Abs(math.Sin(vi_K2*(x+vi_phi2)))
 
 		var vi float64 = (vi0 + vi1 + vi2)*0.333333333333333
 
@@ -187,10 +185,10 @@ func renderFrame(canvas draw.Image) {
 	}
 }
 
-func handleMouseEvent(mouseEvent gui.MouseEvent) {
-	Log("Mouse Event Buttons 0x%X Position:%d,%d\n", mouseEvent.Buttons, mouseEvent.Loc.X, mouseEvent.Loc.Y)
+func handleMouseButtonEvent(mouseEvent jake_graphics.MouseButtonEvent) {
+	Log("Mouse Event Buttons 0x%X Position:%d,%d\n", mouseEvent.Buttons, mouseEvent.X, mouseEvent.Y)
 
-	if mouseEvent.Loc.X == 0 && mouseEvent.Loc.Y == 0 {
+	if mouseEvent.X == 0 && mouseEvent.Y == 0 {
 		return
 	}
 
@@ -204,28 +202,31 @@ func handleMouseEvent(mouseEvent gui.MouseEvent) {
 			factor = 0.5
 		}
 
-		var deltaX int = mouseEvent.Loc.X - g_mouseButtonPressedPosition.X
-		var deltaY int = mouseEvent.Loc.Y - g_mouseButtonPressedPosition.Y
+		var deltaX int = mouseEvent.X - g_mouseButtonPressedPosition.X
+		var deltaY int = mouseEvent.Y - g_mouseButtonPressedPosition.Y
 		if (g_mouseDragging == false) && (deltaX == 0) && (deltaY == 0) && g_mouseButtonPressed != 0x0 {
 			zoomGraph(factor, g_mouseButtonPressedPosition)
 		}
 		g_mouseButtonPressed = 0x0
 		g_mouseDragging = false
-		g_mouseButtonPressedPosition = mouseEvent.Loc
+		g_mouseButtonPressedPosition.X = mouseEvent.X
+		g_mouseButtonPressedPosition.Y = mouseEvent.Y
 	} else {
 		if g_mouseButtonPressed == 0x0 {
 			// Store the mouse button location
-			g_mouseButtonPressedPosition = mouseEvent.Loc
+			g_mouseButtonPressedPosition.X = mouseEvent.X
+			g_mouseButtonPressedPosition.Y = mouseEvent.Y
 			g_mouseDragging = false
 		}
 		if (mouseEvent.Buttons == g_mouseButtonPressed) {
-			var deltaX int = mouseEvent.Loc.X - g_mouseButtonPressedPosition.X
-			var deltaY int = mouseEvent.Loc.Y - g_mouseButtonPressedPosition.Y
+			var deltaX int = mouseEvent.X - g_mouseButtonPressedPosition.X
+			var deltaY int = mouseEvent.Y - g_mouseButtonPressedPosition.Y
 			if (deltaX != 0) || (deltaY != 0) {
 				// Dragging
 				g_mouseDragging = true
 				dragGraph(deltaX, deltaY)
-				g_mouseButtonPressedPosition = mouseEvent.Loc
+				g_mouseButtonPressedPosition.X = mouseEvent.X
+				g_mouseButtonPressedPosition.Y = mouseEvent.Y
 			}
 		}
 		// Store the mouse button pressed buttons
@@ -234,7 +235,7 @@ func handleMouseEvent(mouseEvent gui.MouseEvent) {
 }
 
 type MyKeyEvent struct {
-	drawKeyEvent gui.KeyEvent
+	drawKeyEvent jake_graphics.KeyEvent
 }
 
 func (keyEvent MyKeyEvent) String() string {
@@ -275,7 +276,7 @@ func clampFloat(value float64, min float64, max float64) (result float64) {
 	return result
 }
 
-func handleKeyEvent(keyEvent gui.KeyEvent) {
+func handleKeyEvent(keyEvent jake_graphics.KeyEvent) {
 	var myKeyEvent MyKeyEvent
 	myKeyEvent.drawKeyEvent = keyEvent
 	log.Println("Key Event", myKeyEvent)
@@ -381,36 +382,26 @@ func saveWavFile() {
 }
 
 func main() {
-	var mainWindow gui.Window
-	var error os.Error
 	log.SetFlags(log.Ltime|log.Lmicroseconds)
-	mainWindow, error = x11.NewWindow()
 
-	if error != nil {
-		log.Fatalf("%s", error.String())
-	}
+	jg := jake_graphics.NewInstance()
+	jg.CreateWindow(400, 400, 100, 100)
 
-	g_graphDisplayMask = 0xFF
-	go render(mainWindow)
+	go render(jg)
 
 loop:
 	for {
-		var windowEvent Empty = <-mainWindow.EventChan()
+		windowEvent := jg.WaitForEvent()
 		switch event := windowEvent.(type) {
-		case gui.MouseEvent:
-			handleMouseEvent(event)
-		case gui.KeyEvent:
+		case jake_graphics.MouseButtonEvent:
+			handleMouseButtonEvent(event)
+		case jake_graphics.KeyEvent:
 			handleKeyEvent(event)
-			if event.Key == 65307 { // ESC
+			if event.Key == 9 { // ESC
 				break loop
 			}
-		case gui.ConfigEvent:
-			log.Printf("Config Event\n")
-		case gui.ErrEvent:
-			log.Printf("Error Event\n")
-			break loop
 		}
 
 	}
-	error = mainWindow.Close()
+	jg.CloseWindow()
 }
