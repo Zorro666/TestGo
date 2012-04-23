@@ -6,6 +6,11 @@ import "code.google.com/p/x-go-binding/xgb"
 import "image"
 import "image/draw"
 
+const (
+	keyCodeStart = 8
+	keyCodeEnd = 255
+)
+
 type WindowEvent interface{}
 
 type MouseMoveEvent struct {
@@ -33,9 +38,10 @@ type Jake_Graphics struct {
 	m_win xgb.Id
 	m_gc xgb.Id
 	m_drawable xgb.Id
-	m_backbuffer *image.RGBA
+	m_backbuffer* image.RGBA
 	m_windowWidth int
 	m_windowHeight int
+	m_keyboardMapping* xgb.GetKeyboardMappingReply
 }
 
 func NewInstance() *Jake_Graphics {
@@ -84,6 +90,18 @@ func (jg* Jake_Graphics) CreateWindow(width int, height int, x0 int, y0 int) boo
 	r := image.Rect(0, 0, width, height)
 	jg.m_backbuffer = image.NewRGBA(r)
 	jg.FlipBackBuffer()
+
+	firstKeyCode := keyCodeStart
+	count := keyCodeEnd-keyCodeStart+1
+	keyboardMapping, _ := jg.m_c.GetKeyboardMapping(byte(firstKeyCode), byte(count))
+	jg.m_keyboardMapping = keyboardMapping
+	for i := 0; i < int(jg.m_keyboardMapping.Length); i++ {
+		keysym := jg.m_keyboardMapping.Keysyms[i]
+		keycode := (i/int(jg.m_keyboardMapping.KeysymsPerKeycode))+8
+		fmt.Printf("i:%v keycode:0x%X keySym:0x%X '%c'\n", i, keycode, keysym, keysym)
+	}
+	fmt.Printf("Length:%d keysymsPerKeycode:%d\n", jg.m_keyboardMapping.Length, jg.m_keyboardMapping.KeysymsPerKeycode)
+
 	return true
 }
 
@@ -140,13 +158,17 @@ func (jg* Jake_Graphics) WaitForEvent() (event WindowEvent) {
 			event := KeyEvent{}
 		  event.X = int(x11Event.EventX)
 		  event.Y = int(x11Event.EventY)
-		  event.Key = int(x11Event.Detail)
+			keycode := x11Event.Detail
+			keycodeMapping := (keycode-8)*jg.m_keyboardMapping.KeysymsPerKeycode
+		  event.Key = int(jg.m_keyboardMapping.Keysyms[keycodeMapping])
 			return event
 		case xgb.KeyReleaseEvent:
 			event := KeyEvent{}
 		  event.X = int(x11Event.EventX)
 		  event.Y = int(x11Event.EventY)
-		  event.Key = -int(x11Event.Detail)
+			keycode := x11Event.Detail
+			keycodeMapping := (keycode-8)*jg.m_keyboardMapping.KeysymsPerKeycode
+		  event.Key = -int(jg.m_keyboardMapping.Keysyms[keycodeMapping])
 			return event
 		case xgb.ButtonPressEvent:
 			event := MouseButtonEvent{}
