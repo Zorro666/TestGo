@@ -283,7 +283,7 @@ func handleKeyEvent(keyEvent jake_graphics.KeyEvent) {
 	// Key Release (key -ve)
 	if keyEvent.Key < 0 {
 		var key uint = uint(-keyEvent.Key)
-		var numberKey uint = uint(key) -0x31
+		var numberKey uint = uint(key) - '1'
 		if numberKey < 5 {
 			g_graphDisplayMask ^= (1 << numberKey)
 			log.Printf("g_graphDisplayMask 0x%X\n", g_graphDisplayMask)
@@ -397,7 +397,7 @@ loop:
 			handleMouseButtonEvent(event)
 		case jake_graphics.KeyEvent:
 			handleKeyEvent(event)
-			if event.Key == 9 { // ESC
+			if event.Key == 0xFF1B { // ESC
 				break loop
 			}
 		}

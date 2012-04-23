@@ -73,7 +73,7 @@ loop:
 			  var keyEvent MyKeyEvent
 			  keyEvent.drawKeyEvent = event
 			  fmt.Println("Key Event", keyEvent)
-			  if keyEvent.drawKeyEvent.Key == 9 { // ESC
+			  if keyEvent.drawKeyEvent.Key == 0xFF1B { // ESC
 				  break loop
 			  }
 		}
