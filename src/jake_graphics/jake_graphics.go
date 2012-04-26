@@ -95,11 +95,13 @@ func (jg* Jake_Graphics) CreateWindow(width int, height int, x0 int, y0 int) boo
 	count := keyCodeEnd-keyCodeStart+1
 	keyboardMapping, _ := jg.m_c.GetKeyboardMapping(byte(firstKeyCode), byte(count))
 	jg.m_keyboardMapping = keyboardMapping
+/*
 	for i := 0; i < int(jg.m_keyboardMapping.Length); i++ {
 		keysym := jg.m_keyboardMapping.Keysyms[i]
 		keycode := (i/int(jg.m_keyboardMapping.KeysymsPerKeycode))+8
 		fmt.Printf("i:%v keycode:0x%X keySym:0x%X '%c'\n", i, keycode, keysym, keysym)
 	}
+*/
 	fmt.Printf("Length:%d keysymsPerKeycode:%d\n", jg.m_keyboardMapping.Length, jg.m_keyboardMapping.KeysymsPerKeycode)
 
 	return true
@@ -158,16 +160,19 @@ func (jg* Jake_Graphics) WaitForEvent() (event WindowEvent) {
 			event := KeyEvent{}
 		  event.X = int(x11Event.EventX)
 		  event.Y = int(x11Event.EventY)
-			keycode := x11Event.Detail
-			keycodeMapping := (keycode-8)*jg.m_keyboardMapping.KeysymsPerKeycode
+			keycode := int(x11Event.Detail)
+			modifier := int(x11Event.State)
+			keycodeMapping := (keycode-8)*int(jg.m_keyboardMapping.KeysymsPerKeycode) + modifier
 		  event.Key = int(jg.m_keyboardMapping.Keysyms[keycodeMapping])
+			fmt.Printf("keycode:0x%X keysym:0x%X\n", keycode, event.Key)
 			return event
 		case xgb.KeyReleaseEvent:
 			event := KeyEvent{}
 		  event.X = int(x11Event.EventX)
 		  event.Y = int(x11Event.EventY)
-			keycode := x11Event.Detail
-			keycodeMapping := (keycode-8)*jg.m_keyboardMapping.KeysymsPerKeycode
+			keycode := int(x11Event.Detail)
+			modifier := int(x11Event.State)
+			keycodeMapping := (keycode-8)*int(jg.m_keyboardMapping.KeysymsPerKeycode) + modifier
 		  event.Key = -int(jg.m_keyboardMapping.Keysyms[keycodeMapping])
 			return event
 		case xgb.ButtonPressEvent:
