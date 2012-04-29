@@ -6,11 +6,6 @@ import "code.google.com/p/x-go-binding/xgb"
 import "image"
 import "image/draw"
 
-const (
-	keyCodeStart = 8
-	keyCodeEnd = 255
-)
-
 type WindowEvent interface{}
 
 type MouseMoveEvent struct {
@@ -42,6 +37,8 @@ type Jake_Graphics struct {
 	m_windowWidth int
 	m_windowHeight int
 	m_keyboardMapping* xgb.GetKeyboardMappingReply
+	m_keyCodeStart int
+	m_keyCodeEnd int
 }
 
 func NewInstance() *Jake_Graphics {
@@ -52,6 +49,10 @@ func NewInstance() *Jake_Graphics {
 			return nil
 		}
 	jg.m_c = c
+	jg.m_keyCodeStart = int(jg.m_c.Setup.MinKeycode)
+	jg.m_keyCodeEnd = int(jg.m_c.Setup.MaxKeycode)
+	fmt.Printf("Jake_Graphics: keyCode:%d->%d\n", jg.m_keyCodeStart, jg.m_keyCodeEnd)
+
 	return &jg
 }
 
@@ -91,8 +92,8 @@ func (jg* Jake_Graphics) CreateWindow(width int, height int, x0 int, y0 int) boo
 	jg.m_backbuffer = image.NewRGBA(r)
 	jg.FlipBackBuffer()
 
-	firstKeyCode := keyCodeStart
-	count := keyCodeEnd-keyCodeStart+1
+	firstKeyCode := jg.m_keyCodeStart
+	count := jg.m_keyCodeEnd-jg.m_keyCodeStart+1
 	keyboardMapping, _ := jg.m_c.GetKeyboardMapping(byte(firstKeyCode), byte(count))
 	jg.m_keyboardMapping = keyboardMapping
 /*
@@ -149,6 +150,12 @@ func (jg* Jake_Graphics) FlipBackBuffer() {
 	}
 }
 
+func (jg* Jake_Graphics) computeKeySym(keycode int, modifier int) (keysym int) {
+	keycodeMapping := (keycode-jg.m_keyCodeStart)*int(jg.m_keyboardMapping.KeysymsPerKeycode) + modifier
+  keysym = int(jg.m_keyboardMapping.Keysyms[keycodeMapping])
+	return
+}
+
 func (jg* Jake_Graphics) WaitForEvent() (event WindowEvent) {
   reply, err := jg.m_c.WaitForEvent()
 	if err != nil {
@@ -162,8 +169,7 @@ func (jg* Jake_Graphics) WaitForEvent() (event WindowEvent) {
 		  event.Y = int(x11Event.EventY)
 			keycode := int(x11Event.Detail)
 			modifier := int(x11Event.State)
-			keycodeMapping := (keycode-8)*int(jg.m_keyboardMapping.KeysymsPerKeycode) + modifier
-		  event.Key = int(jg.m_keyboardMapping.Keysyms[keycodeMapping])
+		  event.Key = jg.computeKeySym(keycode, modifier)
 			fmt.Printf("keycode:0x%X keysym:0x%X\n", keycode, event.Key)
 			return event
 		case xgb.KeyReleaseEvent:
@@ -172,8 +178,7 @@ func (jg* Jake_Graphics) WaitForEvent() (event WindowEvent) {
 		  event.Y = int(x11Event.EventY)
 			keycode := int(x11Event.Detail)
 			modifier := int(x11Event.State)
-			keycodeMapping := (keycode-8)*int(jg.m_keyboardMapping.KeysymsPerKeycode) + modifier
-		  event.Key = -int(jg.m_keyboardMapping.Keysyms[keycodeMapping])
+		  event.Key = -jg.computeKeySym(keycode, modifier)
 			return event
 		case xgb.ButtonPressEvent:
 			event := MouseButtonEvent{}
